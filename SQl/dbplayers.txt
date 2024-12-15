@@ -1,0 +1,9 @@
+CREATE DATABASE cant_stop_game;
+
+USE cant_stop_game;
+
+CREATE TABLE players (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    session_id VARCHAR(100) NOT NULL
+);
