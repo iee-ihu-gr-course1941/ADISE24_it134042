@@ -16,6 +16,5 @@ function openDatabaseConnection() {
     return $conn;
 }
 
-// Προσθήκη για έλεγχο σύνδεσης
 openDatabaseConnection();
 ?>

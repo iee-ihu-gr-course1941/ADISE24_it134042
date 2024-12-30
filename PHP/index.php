@@ -6,19 +6,19 @@ function initializePlayer($username) {
     $session_id = session_id();
     $conn = openDatabaseConnection();
     
-    // Έλεγχος αν ο παίκτης υπάρχει ήδη
+    //elenxos an uparxei o paixtis
     $stmt = $conn->prepare("SELECT id FROM players WHERE username = ?");
     $stmt->bind_param("s", $username);
     $stmt->execute();
     $stmt->store_result();
     
     if ($stmt->num_rows > 0) {
-        // Παίκτης υπάρχει ήδη
+        // uparxei
         $stmt->close();
         $conn->close();
         return ["message" => "Username already exists"];
     } else {
-        // Εισαγωγή νέου παίκτη
+        // new user
         $stmt->close();
         $stmt = $conn->prepare("INSERT INTO players (username, session_id) VALUES (?, ?)");
         $stmt->bind_param("ss", $username, $session_id);

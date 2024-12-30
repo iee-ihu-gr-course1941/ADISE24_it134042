@@ -5,14 +5,14 @@ include 'db_connection.php';
 function joinGame($player_id) {
     $conn = openDatabaseConnection();
     
-    // Αναζήτηση για ανοιχτό παιχνίδι
+    // gamesearch
     $stmt = $conn->prepare("SELECT id, player1_id, player2_id FROM games WHERE status = 'open' LIMIT 1");
     $stmt->execute();
     $stmt->bind_result($game_id, $player1_id, $player2_id);
     
     if ($stmt->fetch()) {
         if (is_null($player1_id)) {
-            // Αν το player1_id είναι κενό, προσθέστε τον παίκτη ως player1
+            // an dn uparxei p1 mpenei ekei
             $stmt->close();
             $stmt = $conn->prepare("UPDATE games SET player1_id = ? WHERE id = ?");
             $stmt->bind_param("ii", $player_id, $game_id);
@@ -24,7 +24,7 @@ function joinGame($player_id) {
                 return ["message" => "Error: " . $stmt->error];
             }
         } elseif (is_null($player2_id)) {
-            // Αν το player2_id είναι κενό, προσθέστε τον παίκτη ως player2 και αλλάξτε το status σε active
+            // p2 k status se active
             $stmt->close();
             $stmt = $conn->prepare("UPDATE games SET player2_id = ?, status = 'active' WHERE id = ?");
             $stmt->bind_param("ii", $player_id, $game_id);
@@ -40,7 +40,7 @@ function joinGame($player_id) {
             return ["message" => "Error: Game already has two players"];
         }
     } else {
-        // Αν δεν υπάρχει ανοιχτό παιχνίδι, δημιουργήστε ένα νέο
+        // an dn iparxei dimiourgise kainourio
         $stmt->close();
         $stmt = $conn->prepare("INSERT INTO games (status, player1_id) VALUES ('open', ?)");
         $stmt->bind_param("i", $player_id);
