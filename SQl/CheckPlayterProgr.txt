@@ -1,0 +1,19 @@
+DELIMITER //
+
+CREATE FUNCTION CheckPlayerProgress(player_id INT, game_id INT) 
+RETURNS INT 
+DETERMINISTIC
+BEGIN
+    DECLARE finished_columns INT;
+    
+    SELECT COUNT(*) 
+    INTO finished_columns
+    FROM game_boards
+    WHERE game_id = game_id
+      AND ((player1_id = player_id AND p1prog = max_progress) 
+           OR (player2_id = player_id AND p2prog = max_progress));
+    
+    RETURN finished_columns;
+END //
+
+DELIMITER ;

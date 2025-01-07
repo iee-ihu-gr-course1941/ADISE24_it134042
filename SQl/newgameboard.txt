@@ -1,0 +1,19 @@
+DELIMITER //
+CREATE PROCEDURE InitNewGameBoard(
+    IN new_game_id INT
+)
+BEGIN
+    INSERT INTO game_boards (game_id, column_number, max_progress)
+    VALUES (new_game_id, 2, 3),
+           (new_game_id, 3, 5),
+           (new_game_id, 4, 7),
+           (new_game_id, 5, 9),
+           (new_game_id, 6, 11),
+           (new_game_id, 7, 13),
+           (new_game_id, 8, 11),
+           (new_game_id, 9, 9),
+           (new_game_id, 10, 7),
+           (new_game_id, 11, 5),
+           (new_game_id, 12, 3);
+END //
+DELIMITER ;

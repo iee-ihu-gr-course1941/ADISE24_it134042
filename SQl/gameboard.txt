@@ -1,0 +1,12 @@
+-- Δημιουργία του πίνακα game_boards
+CREATE TABLE game_boards (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    game_id INT NOT NULL, 
+    column_number INT NOT NULL, -- stiles 2-12
+    p1prog INT DEFAULT 0, 
+    p2prog INT DEFAULT 0, 
+    active_player_progress INT DEFAULT 0, 
+    max_progress INT NOT NULL 
+);
+
+
