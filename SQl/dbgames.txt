@@ -3,6 +3,7 @@ CREATE TABLE games (
     player1_id INT,
     player2_id INT,
     status ENUM('open', 'active', 'finished') NOT NULL DEFAULT 'open',
+    active_player INT NOT NULL,
     FOREIGN KEY (player1_id) REFERENCES players(id),
     FOREIGN KEY (player2_id) REFERENCES players(id)
 );
