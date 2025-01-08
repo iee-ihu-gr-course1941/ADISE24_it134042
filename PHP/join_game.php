@@ -5,7 +5,7 @@ include 'db_connection.php';
 function joinGame($player_id) {
     $conn = openDatabaseConnection();
     
-    // check γαι game
+    // Check for open games
     $stmt = $conn->prepare("SELECT id, player1_id FROM games WHERE status = 'open' LIMIT 1");
     $stmt->execute();
     $stmt->bind_result($game_id, $player1_id);
@@ -13,29 +13,46 @@ function joinGame($player_id) {
     if ($stmt->fetch()) {
         $stmt->close();
         
+        // Αν είναι άδειο, τον βάζουμε στο Player1 και τον κάνουμε active_player
         if ($player1_id === NULL) {
-            // an einai adio ton vazoume sto 1 k ton kanoyme active_player
             $stmt = $conn->prepare("UPDATE games SET player1_id = ?, active_player = ? WHERE id = ?");
             $stmt->bind_param("iii", $player_id, $player_id, $game_id);
             if ($stmt->execute()) {
                 return ["message" => "Player1 joined game", "game_id" => $game_id];
             }
         } else {
-            // an exei atomo ton vazoyme sto p2
+            // Αν έχει παίκτη, τον βάζουμε στο Player2 και ενεργοποιούμε το παιχνίδι
             $stmt = $conn->prepare("UPDATE games SET player2_id = ?, status = 'active' WHERE id = ?");
             $stmt->bind_param("ii", $player_id, $game_id);
             if ($stmt->execute()) {
-                return ["message" => "Player2 joined game, game is now active", "game_id" => $game_id];
+                $stmt->close();
+                
             }
         }
     } else {
         $stmt->close();
         
-        // allios dimiourgoyme allo
+        // Δημιουργία νέου παιχνιδιού ανδέν υπάρχει ανοιχτό
         $stmt = $conn->prepare("INSERT INTO games (player1_id, active_player) VALUES (?, ?)");
         $stmt->bind_param("ii", $player_id, $player_id);
         if ($stmt->execute()) {
-            return ["message" => "Player joined new game as Player1 and board initialized", "game_id" => $conn->insert_id];
+            $game_id = $conn->insert_id;
+            $stmt->close();
+            
+            // Κλήση της διαδικασίας για τη δημιουργία νέου πίνακα παιχνιδιού
+            $stmt = $conn->prepare("CALL InitNewGameBoard(?)");
+            $stmt->bind_param("i", $game_id);
+            if ($stmt->execute()) {
+                $stmt->close();
+                $conn->close();
+                return ["message" => "Player joined a new game as Player1 and game board initialized.", "game_id" => $game_id];
+            } else {
+                $stmt->close();
+                $conn->close();
+                return ["message" => "Error: " . $stmt->error];
+            }
+        } else {
+            return ["message" => "Error: " . $stmt->error];
         }
     }
 

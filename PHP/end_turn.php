@@ -2,11 +2,9 @@
 session_start();
 include 'db_connection.php';
 
-
 function validateActivePlayer($player_id, $game_id) {
     $conn = openDatabaseConnection();
     
-    // Προετοιμασία του ερωτήματος για έλεγχο του ενεργού παίκτη
     $stmt = $conn->prepare("SELECT active_player FROM games WHERE id = ?");
     $stmt->bind_param("i", $game_id);
     $stmt->execute();
@@ -16,25 +14,49 @@ function validateActivePlayer($player_id, $game_id) {
     
     return ($player_id == $active_player);
 }
-//vale tin proodo stin stili toy paixti
+
 function updateProgress($game_id, $active_player_column) {
     $conn = openDatabaseConnection();
     
-    // Προετοιμασία του ερωτήματος για την ενημέρωση της προόδου του ενεργού παίκτη
+    $stmt = $conn->prepare("SELECT active_player_progress FROM game_boards WHERE game_id = ?");
+    $stmt->bind_param("i", $game_id);
+    $stmt->execute();
+    $stmt->bind_result($active_player_progress);
+    $stmt->fetch();
+    $stmt->close();
+    
+//tin proodo tou giro ston paixti
     $stmt = $conn->prepare("
         UPDATE game_boards
-        SET $active_player_column = $active_player_column + active_player_progress, 
-            active_player_progress = 0
+        SET $active_player_column = $active_player_column + ?, 
+            active_player_progress = 0 
         WHERE game_id = ?
     ");
-    $stmt->bind_param("i", $game_id);
+    $stmt->bind_param("ii", $active_player_progress, $game_id);
     $stmt->execute();
     $stmt->close();
 }
 
+function checkWinCondition($game_id, $active_player_column) {
+    $conn = openDatabaseConnection();
+
+    $stmt = $conn->prepare("
+        SELECT SUM(CASE WHEN p1prog >= 3 THEN 1 ELSE 0 END +
+                   CASE WHEN p2prog >= 3 THEN 1 ELSE 0 END +
+                   CASE WHEN active_player_progress >= 3 THEN 1 ELSE 0 END) as progress_count
+        FROM game_boards 
+        WHERE game_id = ?
+    ");
+    $stmt->bind_param("i", $game_id);
+    $stmt->execute();
+    $stmt->bind_result($progress_count);
+    $stmt->fetch();
+    $stmt->close();
+
+    return ($progress_count >= 3);
+}
 
 function endTurn($game_id, $player_id) {
-    // check active player
     if (!validateActivePlayer($player_id, $game_id)) {
         return ["message" => "Error: Δεν είστε ο ενεργός παίκτης. Περιμένετε τον γύρο σας."];
     }
@@ -42,8 +64,8 @@ function endTurn($game_id, $player_id) {
     $conn = openDatabaseConnection();
     
     $stmt = $conn->prepare("
-        SELECT player1_id, player2_id, active_player
-        FROM games
+        SELECT player1_id, player2_id, active_player 
+        FROM games 
         WHERE id = ?
     ");
     $stmt->bind_param("i", $game_id);
@@ -53,37 +75,42 @@ function endTurn($game_id, $player_id) {
     if ($stmt->fetch()) {
         $stmt->close();
         
-        // pios epeze
         $active_player_column = ($active_player == $player1_id) ? 'p1prog' : 'p2prog';
         
-        
-        updateProgress($game_id, $active_player_column);
-        
-        // prep check gia nikiti
+        // proodo tou paixti
         $stmt = $conn->prepare("
-            SELECT $active_player_column 
+            SELECT active_player_progress 
             FROM game_boards 
             WHERE game_id = ?
         ");
         $stmt->bind_param("i", $game_id);
         $stmt->execute();
-        $stmt->bind_result($current_progress);
+        $stmt->bind_result($active_player_progress);
         $stmt->fetch();
         $stmt->close();
-            //an kerdise
-        if ($current_progress >= 3) {
+        
+        // update p*prog
+        updateProgress($game_id, $active_player_column, $active_player_progress);
+        
+        // elenxos gia win 
+        if (checkWinCondition($game_id, $active_player_column)) {
+            $stmt = $conn->prepare("UPDATE games SET status = 'finished' WHERE id = ?");
+            $stmt->bind_param("i", $game_id);
+            $stmt->execute();
+            $stmt->close();
+            
             $winner = ($active_player == $player1_id) ? "Player1" : "Player2";
-            return ["message" => "$winner won!", "winner" => $winner];
+            return ["message" => "$winner κέρδισε!", "winner" => $winner];
         } else {
-            // allagi paixti
+            //allios change turn
             $new_active_player = ($active_player == $player1_id) ? $player2_id : $player1_id;
             $stmt = $conn->prepare("UPDATE games SET active_player = ? WHERE id = ?");
             $stmt->bind_param("ii", $new_active_player, $game_id);
             if ($stmt->execute()) {
                 $stmt->close();
                 $conn->close();
-                return ["message" => "Turn completed. Active player switched", "active_player" => $new_active_player];
-            } else {
+                return ["message" => "Turn completed. Active player switched", "active_player"  => $new_active_player];
+            } else{
                 return ["message" => "Error: " . $stmt->error];
             }
         }
