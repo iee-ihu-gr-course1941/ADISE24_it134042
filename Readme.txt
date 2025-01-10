@@ -1,10 +1,12 @@
+LINK:
+
 ## Initialize Player API
 
 ### Description
 Η `initialize_player.php` API δέχεται ένα `username` και ελέγχει αν υπάρχει ήδη κάποιος παίκτης με αυτό το όνομα στη βάση δεδομένων. Αν δεν υπάρχει, δημιουργεί έναν νέο παίκτη και ξεκινάει μια νέα συνεδρία (session).
 
 ### Endpoint
-`GET /ADISE24_AM134042/PHP/initialize_player.php?username={username}`
+`GET /initialize_player.php?username={username}`
 
 ### Parameters
 - `username` (required): Το όνομα του χρήστη που θέλεις να αρχικοποιήσεις.
@@ -24,7 +26,7 @@
 Η join_game.php API δέχεται τον player_id και τον προσθέτει σε ένα ανοιχτό παιχνίδι, δημιουργώντας ένα νέο παιχνίδι αν δεν υπάρχει διαθέσιμο.
 
 ###Endpoint
-GET /ADISE24_AM134042/PHP/join_game.php?player_id={player_id}
+GET /join_game.php?player_id={player_id}
 
 ###Parameters
 player_id (required): Το αναγνωριστικό του παίκτη που θέλει να συμμετάσχει στο παιχνίδι.
@@ -59,6 +61,31 @@ json
   "game_id": {game_id}
 }
 ------------------------------------------
+## Roll Dice API
+### Description
+
+Η `roll.php` API εκτελεί έναν γύρο ζαριών, επιστρέφει τους έγκυρους συνδυασμούς σε ζεύγη αριθμών και ελέγχει αν υπάρχουν μηδενικά. Αν ναι, αλλάζει η σειρά του ενεργού παίκτη και μηδενίζει την διαδικασία.
+
+### Endpoint
+
+`GET /roll.php?game_id={game_id}`
+
+### Parameters
+
+- **game_id (required)**: Το αναγνωριστικό του παιχνιδιού στο οποίο ενεργείς.
+
+### Response
+
+Η API επιστρέφει μια JSON απάντηση με την ακόλουθη δομή:
+
+#### Αν όλα τα ζεύγη είναι [0, 0] και αλλάζει ο ενεργός παίκτης:
+
+```json
+{
+  "message": "No valid combinations. Active player switched."
+}
+
+------------------------------------------
 ###End Turn API
 ###Description
 
@@ -66,7 +93,7 @@ json
 
 ###Endpoint
 
-GET /ADISE24_AM134042/PHP/end_turn.php?game_id={game_id}
+GET /end_turn.php?game_id={game_id}
 
 ###Parameters
 
@@ -102,6 +129,27 @@ json
 {
   "message": "Game not found"
 }
+-----------------------------------
+## Choose API
+
+### Περιγραφή
+Η `choose.php` API δέχεται μια ή περισσότερες επιλογές στήλης (1 ή 2) και ενημερώνει την πρόοδο του ενεργού παίκτη για τις αντίστοιχες στήλες.
+
+### Endpoint
+`GET /choose.php?game_id={game_id}&choices={choices}`
+
+### Παράμετροι
+- `game_id` (απαιτείται): Το ID του παιχνιδιού για το οποίο γίνεται η ενημέρωση της προόδου.
+- `choices` (απαιτείται): Μία ή περισσότερες επιλογές στήλης διαχωρισμένες με κόμμα (π.χ. `2,3`).
+
+### Απόκριση
+Η API επιστρέφει μια JSON απάντηση με την ακόλουθη δομή:
+- Αν οι επιλογές ενημερώθηκαν επιτυχώς:
+  ```json
+  {
+    "message": "Progress updated for columns: 2, 3"
+  }
+
 ------------------------------------
 SQL Functions
 

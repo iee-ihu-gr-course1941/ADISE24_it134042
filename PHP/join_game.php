@@ -13,7 +13,7 @@ function joinGame($player_id) {
     if ($stmt->fetch()) {
         $stmt->close();
         
-        // Αν είναι άδειο, τον βάζουμε στο Player1 και τον κάνουμε active_player
+        // an einai adeio vazoyme sto p1
         if ($player1_id === NULL) {
             $stmt = $conn->prepare("UPDATE games SET player1_id = ?, active_player = ? WHERE id = ?");
             $stmt->bind_param("iii", $player_id, $player_id, $game_id);
@@ -21,7 +21,7 @@ function joinGame($player_id) {
                 return ["message" => "Player1 joined game", "game_id" => $game_id];
             }
         } else {
-            // Αν έχει παίκτη, τον βάζουμε στο Player2 και ενεργοποιούμε το παιχνίδι
+            // an exei paixti vazoyme p2
             $stmt = $conn->prepare("UPDATE games SET player2_id = ?, status = 'active' WHERE id = ?");
             $stmt->bind_param("ii", $player_id, $game_id);
             if ($stmt->execute()) {
@@ -32,14 +32,14 @@ function joinGame($player_id) {
     } else {
         $stmt->close();
         
-        // Δημιουργία νέου παιχνιδιού ανδέν υπάρχει ανοιχτό
+        // an dn iparxei kanoume kainourio
         $stmt = $conn->prepare("INSERT INTO games (player1_id, active_player) VALUES (?, ?)");
         $stmt->bind_param("ii", $player_id, $player_id);
         if ($stmt->execute()) {
             $game_id = $conn->insert_id;
             $stmt->close();
             
-            // Κλήση της διαδικασίας για τη δημιουργία νέου πίνακα παιχνιδιού
+            // new gameboard
             $stmt = $conn->prepare("CALL InitNewGameBoard(?)");
             $stmt->bind_param("i", $game_id);
             if ($stmt->execute()) {
