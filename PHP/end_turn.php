@@ -102,6 +102,15 @@ function endTurn($game_id, $player_id) {
             $winner = ($active_player == $player1_id) ? "Player1" : "Player2";
             return ["message" => "$winner κέρδισε!", "winner" => $winner];
         } else {
+            $conn = openDatabaseConnection();
+            $stmt_col = $conn->prepare("UPDATE active_column 
+                            SET column1 = 0, column2 = 0, column3 = 0
+                            WHERE game_id = ?");
+            $stmt_col->bind_param("i", $game_id);
+            $stmt_col->execute();
+            $stmt_col->close();
+
+
             //allios change turn
             $new_active_player = ($active_player == $player1_id) ? $player2_id : $player1_id;
             $stmt = $conn->prepare("UPDATE games SET active_player = ? WHERE id = ?");

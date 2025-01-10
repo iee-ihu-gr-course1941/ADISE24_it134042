@@ -15,5 +15,8 @@ BEGIN
            (new_game_id, 10, 7),
            (new_game_id, 11, 5),
            (new_game_id, 12, 3);
+
+    INSERT INTO active_column (game_id, player_id, column1, column2, column3)
+    VALUES (new_game_id, 0, 0, 0, 0);
 END //
 DELIMITER ;
